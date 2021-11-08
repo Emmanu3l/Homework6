@@ -33,7 +33,7 @@ class NewsListViewModel(private val newsRepository : NewsRepository, private val
     val showImages = MutableLiveData(false)
     val downloadImages = MutableLiveData(false)
 
-    private fun downloadNewsItems(newsFeedUrl: String, delete : Boolean) {
+    /*private fun downloadNewsItems(newsFeedUrl: String, delete : Boolean) {
         _error.value = false
         viewModelScope.launch {
             val newsItemsFromDownloader = NewsDownloader().load(newsFeedUrl)
@@ -43,7 +43,7 @@ class NewsListViewModel(private val newsRepository : NewsRepository, private val
                 else -> newsRepository.insert(newsItemsFromDownloader)
             }
         }
-    }
+    }*/
 
     fun updatePreferences(feedUrl : String, showImages : Boolean, downloadImages : Boolean) {
         viewModelScope.launch {
@@ -53,7 +53,7 @@ class NewsListViewModel(private val newsRepository : NewsRepository, private val
         }
     }
 
-    fun reload() {
+    /*fun reload() {
         lastFeedUrl?.let { downloadNewsItems(it, delete = false) }
-    }
+    }*/
 }

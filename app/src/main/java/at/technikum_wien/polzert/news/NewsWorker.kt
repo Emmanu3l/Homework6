@@ -15,9 +15,11 @@ import java.util.concurrent.TimeUnit
 
 class NewsWorker(appContext : Context, workerParameters: WorkerParameters) : Worker(appContext, workerParameters)  {
 
-    private val _error = MutableLiveData<Boolean>(false)
-    private var lastFeedUrl : String? = null
-    val newsRepository = NewsRepository(applicationContext)
+    private var _error = false
+    private val newsRepository = NewsRepository(applicationContext)
+    private val newsFeedUrl = inputData.getString("feedUrl")
+    private val urlChanged = false
+
 
     /*companion object {
         val LOG_TAG: String = NewsWorker::class.java.simpleName
@@ -46,19 +48,20 @@ class NewsWorker(appContext : Context, workerParameters: WorkerParameters) : Wor
 
         //fill database, check whether empty in activity
 
-        val newsFeedUrl = inputData.getString("url")
-        val urlChanged = false
-
         GlobalScope.launch {
-            _error.value = false
+            _error = false
             val newsItemsFromDownloader = NewsDownloader().load(newsFeedUrl.orEmpty())
             when {
-                newsItemsFromDownloader == null -> _error.value = true
+                newsItemsFromDownloader == null -> _error = true
                 urlChanged -> newsRepository.replace(newsItemsFromDownloader)
                 else -> newsRepository.insert(newsItemsFromDownloader)
             }
         }
-        return Result.success()
+        return if(_error) {
+            Result.failure()
+        } else {
+            Result.success()
+        }
     }
 
 }

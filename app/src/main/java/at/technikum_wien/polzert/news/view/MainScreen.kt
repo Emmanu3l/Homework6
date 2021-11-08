@@ -26,8 +26,8 @@ fun MainScreen(navController: NavController, viewModel : NewsListViewModel) {
     val error by viewModel.error.observeAsState()
     var expanded by remember { mutableStateOf(false) }
 
-    val url by viewModel.feedUrl.observeAsState()
-    var workerData : Data = workDataOf("url" to url)
+    val feedUrl by viewModel.feedUrl.observeAsState()
+    var workerData : Data = workDataOf("feedUrl" to feedUrl)
     val context = LocalContext.current
 
     Scaffold(
