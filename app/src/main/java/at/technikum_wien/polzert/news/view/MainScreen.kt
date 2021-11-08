@@ -10,16 +10,25 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import androidx.work.*
+import at.technikum_wien.polzert.news.CoroutineNewsWorker
+import at.technikum_wien.polzert.news.NewsWorker
 import at.technikum_wien.polzert.news.R
 import at.technikum_wien.polzert.news.viewmodels.NewsListViewModel
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun MainScreen(navController: NavController, viewModel : NewsListViewModel) {
     val newsItems by viewModel.newsItems.observeAsState()
     val error by viewModel.error.observeAsState()
     var expanded by remember { mutableStateOf(false) }
+
+    val url by viewModel.feedUrl.observeAsState()
+    var workerData : Data = workDataOf("url" to url)
+    val context = LocalContext.current
 
     Scaffold(
         topBar = { TopAppBar(
@@ -40,7 +49,14 @@ fun MainScreen(navController: NavController, viewModel : NewsListViewModel) {
                     ) {
                         DropdownMenuItem(
                             onClick = {
-                                viewModel.reload()
+                                //viewModel.reload()
+
+                                val workRequest = OneTimeWorkRequest.Builder(NewsWorker::class.java)
+                                    .setInputData(workerData)
+                                    .build()
+                                WorkManager.getInstance(context).enqueue(
+                                    workRequest
+                                )
                             },
                         ) {
                             Text(stringResource(R.string.reload))
@@ -62,6 +78,21 @@ fun MainScreen(navController: NavController, viewModel : NewsListViewModel) {
             if (error == true)
                 Text(text = stringResource(R.string.error_message))
             LazyColumn(Modifier.fillMaxWidth()) {
+                //Download new data once every half an hour using a worker (periodic request).
+                val workRequest = PeriodicWorkRequest.Builder(CoroutineNewsWorker::class.java, 30, TimeUnit.MINUTES)
+                    //.setInputData(workerData)
+                    .build()
+                WorkManager.getInstance(context).enqueue(
+                    workRequest
+                )
+                if (newsItems.isNullOrEmpty()) {
+                    val workRequest = OneTimeWorkRequest.Builder(NewsWorker::class.java)
+                        .setInputData(workerData)
+                        .build()
+                    WorkManager.getInstance(context).enqueue(
+                        workRequest
+                    )
+                }
                 itemsIndexed(newsItems ?: listOf()) { index, newsItem ->
                     if (index == 0)
                         NewsItemFirstRow(

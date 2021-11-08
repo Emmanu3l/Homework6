@@ -18,9 +18,9 @@ class NewsListViewModel(private val newsRepository : NewsRepository, private val
                 feedUrl.value = it.feedUrl
                 showImages.value = it.showImages
                 downloadImages.value = it.downloadImages
-                if (lastFeedUrl != null && lastFeedUrl != it.feedUrl) {
+                /*if (lastFeedUrl != null && lastFeedUrl != it.feedUrl) {
                     downloadNewsItems(it.feedUrl, delete = true)
-                }
+                }*/
                 lastFeedUrl = it.feedUrl
             }
         }
@@ -28,7 +28,8 @@ class NewsListViewModel(private val newsRepository : NewsRepository, private val
 
     val error : LiveData<Boolean>
         get() = _error
-    val feedUrl = MutableLiveData("")
+    //val feedUrl = MutableLiveData("")
+    val feedUrl = MutableLiveData("https://www.engadget.com/rss.xml")
     val showImages = MutableLiveData(false)
     val downloadImages = MutableLiveData(false)
 

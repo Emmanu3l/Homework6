@@ -12,10 +12,16 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import at.technikum_wien.polzert.news.NewsWorker
 import at.technikum_wien.polzert.news.R
 import at.technikum_wien.polzert.news.viewmodels.NewsListViewModel
 
@@ -29,11 +35,22 @@ fun SettingsScreen(navController : NavController, viewModel : NewsListViewModel)
     var newShowImages by remember { mutableStateOf(showImages) }
     var newDownloadImages by remember { mutableStateOf(downloadImages) }
 
+    val url by viewModel.feedUrl.observeAsState()
+    var workerData : Data = workDataOf("url" to url)
+    val context = LocalContext.current
+
+
     BackHandler {
         viewModel.updatePreferences(
             feedUrl = newFeedUrl ?: "https://www.engadget.com/rss.xml",
             showImages = newShowImages ?: true,
             downloadImages = newDownloadImages ?: true
+        )
+        val workRequest = OneTimeWorkRequest.Builder(NewsWorker::class.java)
+            .setInputData(workerData)
+            .build()
+        WorkManager.getInstance(context).enqueue(
+            workRequest
         )
         navController.navigateUp()
     }
