@@ -27,7 +27,6 @@ fun MainScreen(navController: NavController, viewModel : NewsListViewModel) {
     var expanded by remember { mutableStateOf(false) }
 
     val feedUrl by viewModel.feedUrl.observeAsState()
-    var workerData : Data = workDataOf("feedUrl" to feedUrl)
     val context = LocalContext.current
 
     Scaffold(
@@ -51,8 +50,9 @@ fun MainScreen(navController: NavController, viewModel : NewsListViewModel) {
                             onClick = {
                                 //viewModel.reload()
 
+                                //reload
                                 val workRequest = OneTimeWorkRequest.Builder(NewsWorker::class.java)
-                                    .setInputData(workerData)
+                                    .setInputData(workDataOf("feedUrl" to feedUrl, "urlChanged" to false, "deleteOld" to false))
                                     .build()
                                 WorkManager.getInstance(context).enqueue(
                                     workRequest
@@ -77,22 +77,25 @@ fun MainScreen(navController: NavController, viewModel : NewsListViewModel) {
         Column {
             if (error == true)
                 Text(text = stringResource(R.string.error_message))
-            LazyColumn(Modifier.fillMaxWidth()) {
-                //Download new data once every half an hour using a worker (periodic request).
-                val workRequest = PeriodicWorkRequest.Builder(CoroutineNewsWorker::class.java, 30, TimeUnit.MINUTES)
-                    //.setInputData(workerData)
+
+            //Download new data once every half an hour using a worker (periodic request).
+            val periodicWorkRequest = PeriodicWorkRequest.Builder(CoroutineNewsWorker::class.java, 30, TimeUnit.MINUTES)
+                .setInputData(workDataOf("feedUrl" to feedUrl, "urlChanged" to false, "deleteOld" to true))
+                .build()
+            WorkManager.getInstance(context).enqueue(
+                periodicWorkRequest
+            )
+
+            if (newsItems.isNullOrEmpty()) {
+                val workRequest = OneTimeWorkRequest.Builder(NewsWorker::class.java)
+                    .setInputData(workDataOf("feedUrl" to feedUrl, "urlChanged" to false, "deleteOld" to false))
                     .build()
                 WorkManager.getInstance(context).enqueue(
                     workRequest
                 )
-                if (newsItems.isNullOrEmpty()) {
-                    val workRequest = OneTimeWorkRequest.Builder(NewsWorker::class.java)
-                        .setInputData(workerData)
-                        .build()
-                    WorkManager.getInstance(context).enqueue(
-                        workRequest
-                    )
-                }
+            }
+
+            LazyColumn(Modifier.fillMaxWidth()) {
                 itemsIndexed(newsItems ?: listOf()) { index, newsItem ->
                     if (index == 0)
                         NewsItemFirstRow(

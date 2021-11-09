@@ -35,8 +35,6 @@ fun SettingsScreen(navController : NavController, viewModel : NewsListViewModel)
     var newShowImages by remember { mutableStateOf(showImages) }
     var newDownloadImages by remember { mutableStateOf(downloadImages) }
 
-    val url by viewModel.feedUrl.observeAsState()
-    var workerData : Data = workDataOf("url" to url)
     val context = LocalContext.current
 
 
@@ -47,7 +45,7 @@ fun SettingsScreen(navController : NavController, viewModel : NewsListViewModel)
             downloadImages = newDownloadImages ?: true
         )
         val workRequest = OneTimeWorkRequest.Builder(NewsWorker::class.java)
-            .setInputData(workerData)
+            .setInputData(workDataOf("feedUrl" to feedUrl, "urlChanged" to true, "deleteOld" to false))
             .build()
         WorkManager.getInstance(context).enqueue(
             workRequest

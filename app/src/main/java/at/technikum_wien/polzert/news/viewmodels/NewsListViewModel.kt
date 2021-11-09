@@ -28,8 +28,7 @@ class NewsListViewModel(private val newsRepository : NewsRepository, private val
 
     val error : LiveData<Boolean>
         get() = _error
-    //val feedUrl = MutableLiveData("")
-    val feedUrl = MutableLiveData("https://www.engadget.com/rss.xml")
+    val feedUrl = MutableLiveData("")
     val showImages = MutableLiveData(false)
     val downloadImages = MutableLiveData(false)
 

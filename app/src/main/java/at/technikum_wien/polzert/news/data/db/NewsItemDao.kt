@@ -27,6 +27,8 @@ abstract class NewsItemDao {
     abstract suspend fun delete(newsItem: NewsItem)
     @Query("DELETE FROM news_item")
     abstract suspend fun deleteAll()
+    @Query("DELETE FROM news_item WHERE publication_date < DATETIME('now', '-5 days')")
+    abstract suspend fun deleteOld()
 
     @Transaction
     open suspend fun updateOrInsertAll(newsItems: List<NewsItem>) {

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import at.technikum_wien.polzert.news.data.NewsRepository
 import at.technikum_wien.polzert.news.data.db.ApplicationDatabase
+import at.technikum_wien.polzert.news.data.db.NewsItemDao
 import at.technikum_wien.polzert.news.data.download.NewsDownloader
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -17,8 +18,10 @@ class NewsWorker(appContext : Context, workerParameters: WorkerParameters) : Wor
 
     private var _error = false
     private val newsRepository = NewsRepository(applicationContext)
+    private val newsItemDao = ApplicationDatabase.getDatabase(applicationContext).newsItemDao()
     private val newsFeedUrl = inputData.getString("feedUrl")
-    private val urlChanged = false
+    private val urlChanged = inputData.getBoolean("urlChanged", false)
+    private val deleteOld = inputData.getBoolean("deleteOld", false)
 
 
     /*companion object {
@@ -51,6 +54,9 @@ class NewsWorker(appContext : Context, workerParameters: WorkerParameters) : Wor
         GlobalScope.launch {
             _error = false
             val newsItemsFromDownloader = NewsDownloader().load(newsFeedUrl.orEmpty())
+            if (deleteOld) {
+                newsItemDao.deleteOld()
+            }
             when {
                 newsItemsFromDownloader == null -> _error = true
                 urlChanged -> newsRepository.replace(newsItemsFromDownloader)
